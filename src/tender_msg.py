@@ -10,7 +10,7 @@ user_name = "admin"
 password = "Cfgauss11!Aws"
 db_name = "ExampleDB"
 # endregion
-# DAY'S END!
+# DAY'S END!!!
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
