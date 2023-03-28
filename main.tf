@@ -71,14 +71,14 @@ resource "aws_api_gateway_integration" "edi-transfer-2" {
   type                    = "AWS"
   http_method             = "POST"
   integration_http_method = "POST"
-  credentials             = "arn:aws:iam::186314775128:role/api-gateway-to-sqs"
+  credentials             = "arn:aws:iam::${local.account}:role/api-gateway-to-sqs"
   request_parameters      = {
     "integration.request.header.Content-Type": "'application/x-www-form-urlencoded'"
   }
   request_templates       = {
     "application/json": "Action=SendMessage\u0026MessageGroupId=edi\u0026MessageBody=$util.urlEncode($input.body)"
   }
-  uri                     = "arn:aws:apigateway:us-east-1:sqs:path/186314775128/edi-queue.fifo"
+  uri                     = "arn:aws:apigateway:us-east-1:sqs:path/${local.account}/edi-queue.fifo"
 }
 
 resource "aws_api_gateway_method" "edi-transfer-2" {
@@ -101,11 +101,11 @@ resource "aws_lambda_function" "edi-TenderMsgFunction-CI44xHeEeKTe" {
   ]
   source_code_hash = "${data.archive_file.lambda.output_base64sha256}"
   function_name = "edi-TenderMsgFunction-CI44xHeEeKTe"
-  role          = "arn:aws:iam::186314775128:role/edi-TenderMsgFunctionRole-1OY1LYYV71U88"
+  role          = "arn:aws:iam::${local.account}:role/edi-TenderMsgFunctionRole-1OY1LYYV71U88"
   runtime       = "python3.9"
   handler       = "tender_msg.lambda_handler"
   layers        =  [
-    "arn:aws:lambda:us-east-1:186314775128:layer:edi:1"
+    "arn:aws:lambda:us-east-1:${local.account}:layer:edi:1"
   ]
   timeout       = 20
   
@@ -178,13 +178,13 @@ resource "aws_iam_role_policy_attachment" "AmazonAPIGatewayPushToCloudWatchLogs"
 
 resource "aws_iam_role_policy_attachment" "api-send-to-sqs" {
   role       = "api-gateway-to-sqs"
-  policy_arn = "arn:aws:iam::186314775128:policy/api-send-to-sqs"
+  policy_arn = "arn:aws:iam::${local.account}:policy/api-send-to-sqs"
 }
 
 resource "aws_iam_policy" "api-send-to-sqs" {
   name          = "api-send-to-sqs"
   description   = "test sending edi files to sqs via api gateway"
-  policy        = "{\"Statement\":[{\"Action\":[\"sqs:SendMessage\"],\"Effect\":\"Allow\",\"Resource\":[\"arn:aws:sqs:us-east-1:186314775128:edi-queue.fifo\"]}],\"Version\":\"2012-10-17\"}"
+  policy        = "{\"Statement\":[{\"Action\":[\"sqs:SendMessage\"],\"Effect\":\"Allow\",\"Resource\":[\"arn:aws:sqs:us-east-1:${local.account}:edi-queue.fifo\"]}],\"Version\":\"2012-10-17\"}"
 }
 
 resource "aws_db_instance" "mysqlforlambda" {
