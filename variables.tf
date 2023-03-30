@@ -6,4 +6,5 @@ locals {
   lambda_code_filename = "tender_msg.zip"
   lambda_src_path = "./src"
   account = "186314775128"
+  stage_name = "v1"
 }
