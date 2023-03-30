@@ -26,11 +26,6 @@ provider "aws" {
 #   }
 # }
 
-# resource "aws_lambda_layer_version" "edi"{
-#   layer_name = "edi"
-#   compatible_runtimes = ["python3.9"]
-# }
-
 resource "aws_sqs_queue" "edi-DeadLetters-2" {
   name                              = "edi-DeadLetters-2.fifo"
   content_based_deduplication       = true
@@ -225,89 +220,85 @@ resource "aws_api_gateway_integration_response" "integration_response" {
   ]
 }
 
+resource "aws_lambda_layer_version" "edi-2"{
+  filename = "lambda-layer/edi-layer-requirements.zip"
+  layer_name = "edi-2"
+  compatible_runtimes = ["python3.9"]
+}
 
+# note: assumes layer is already created
+resource "aws_lambda_function" "edi-TenderMsgFunction" {
+  filename = "${local.building_path}/${local.lambda_code_filename}"
+  depends_on = [
+        null_resource.build_lambda_function
+  ]
+  source_code_hash = "${data.archive_file.lambda.output_base64sha256}"
+  function_name = "edi-TenderMsgFunction"
+  role          = aws_iam_role.edi-TenderMsgFunctionRole.arn
+  runtime       = "python3.9"
+  handler       = "tender_msg.lambda_handler"
+  layers        =  [
+    # "arn:aws:lambda:us-east-1:${local.account}:layer:edi:1"
+    aws_lambda_layer_version.edi-2.arn
+  ]
+  timeout       = 20
 
-# resource "aws_lambda_function" "edi-TenderMsgFunction-CI44xHeEeKTe" {
-#   filename = "${local.building_path}/${local.lambda_code_filename}"
-#   depends_on = [
-#         null_resource.build_lambda_function
-#   ]
-#   source_code_hash = "${data.archive_file.lambda.output_base64sha256}"
-#   function_name = "edi-TenderMsgFunction-CI44xHeEeKTe"
-#   role          = "arn:aws:iam::${local.account}:role/edi-TenderMsgFunctionRole-1OY1LYYV71U88"
-#   runtime       = "python3.9"
-#   handler       = "tender_msg.lambda_handler"
-#   layers        =  [
-#     "arn:aws:lambda:us-east-1:${local.account}:layer:edi:1"
-#   ]
-#   timeout       = 20
+  lifecycle {
+    ignore_changes = [
+        publish
+    ]
+  }
+}
 
-#   lifecycle {
-#     ignore_changes = [
-#         publish
-#     ]
-#   }
-# }
+resource "null_resource" "build_lambda_function" {
+    triggers = {
+        build_number = "${timestamp()}" # TODO: calculate hash of lambda function. Mo will have a look at this part
+    }
 
-# resource "null_resource" "build_lambda_function" {
-#     triggers = {
-#         build_number = "${timestamp()}" # TODO: calculate hash of lambda function. Mo will have a look at this part
-#     }
+    provisioner "local-exec" {
+        command =  substr(pathexpand("~"), 0, 1) == "/"? "./py_build.sh \"${local.lambda_src_path}\" \"${local.building_path}\" \"${local.lambda_code_filename}\" Function" : "powershell.exe -File .\\PyBuild.ps1 ${local.lambda_src_path} ${local.building_path} ${local.lambda_code_filename} Function"
+    }
+}
 
-#     provisioner "local-exec" {
-#         command =  substr(pathexpand("~"), 0, 1) == "/"? "./py_build.sh \"${local.lambda_src_path}\" \"${local.building_path}\" \"${local.lambda_code_filename}\" Function" : "powershell.exe -File .\\PyBuild.ps1 ${local.lambda_src_path} ${local.building_path} ${local.lambda_code_filename} Function"
-#     }
-# }
+resource "null_resource" "sam_metadata_aws_lambda_function_edi-TenderMsgFunction" {
+    triggers = {
+        resource_name = "aws_lambda_function.edi-TenderMsgFunction"
+        resource_type = "ZIP_LAMBDA_FUNCTION"
+        original_source_code = "${local.lambda_src_path}"
+        built_output_path = "${local.building_path}/${local.lambda_code_filename}"
+    }
+    depends_on = [
+        null_resource.build_lambda_function
+    ]
+}
 
-# resource "null_resource" "sam_metadata_aws_lambda_function_edi-TenderMsgFunction-CI44xHeEeKTe" {
-#     triggers = {
-#         resource_name = "aws_lambda_function.edi-TenderMsgFunction-CI44xHeEeKTe"
-#         resource_type = "ZIP_LAMBDA_FUNCTION"
-#         original_source_code = "${local.lambda_src_path}"
-#         built_output_path = "${local.building_path}/${local.lambda_code_filename}"
-#     }
-#     depends_on = [
-#         null_resource.build_lambda_function
-#     ]
-# }
+data "archive_file" "lambda" {
+  type        = "zip"
+  source_dir = "./src"
+  output_path = "${local.building_path}/${local.lambda_code_filename}"
+}
 
-# data "archive_file" "lambda" {
-#   type        = "zip"
-#   source_dir = "./src"
-#   output_path = "${local.building_path}/${local.lambda_code_filename}"
-# }
+resource "aws_iam_role" "edi-TenderMsgFunctionRole" {
+  name               = "edi-TenderMsgFunctionRole"
+  assume_role_policy = "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}"
+}
 
-# resource "aws_iam_role" "edi-TenderMsgFunctionRole-1OY1LYYV71U88" {
-#   name               = "edi-TenderMsgFunctionRole-1OY1LYYV71U88"
-#   assume_role_policy = "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}"
-# }
+resource "aws_iam_role_policy_attachment" "AmazonSQSFullAccess" {
+  role       = aws_iam_role.edi-TenderMsgFunctionRole.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSQSFullAccess"
+}
 
-# resource "aws_iam_role_policy_attachment" "AmazonSQSFullAccess" {
-#   role       = "edi-TenderMsgFunctionRole-1OY1LYYV71U88"
-#   policy_arn = "arn:aws:iam::aws:policy/AmazonSQSFullAccess"
-# }
+resource "aws_lambda_event_source_mapping" "event_source_mapping" {
+  event_source_arn = "${aws_sqs_queue.edi-queue-2.arn}"
+  enabled          = true
+  function_name    = "${aws_lambda_function.edi-TenderMsgFunction.function_name}"
+  batch_size       = 1
+}
 
-# resource "aws_iam_role_policy_attachment" "AWSLambdaBasicExecutionRole" {
-#   role       = "edi-TenderMsgFunctionRole-1OY1LYYV71U88"
-#   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-# }
-
-# resource "aws_iam_role" "AWSCloud9SSMAccessRole" {
-#   name               = "AWSCloud9SSMAccessRole"
-#   assume_role_policy = "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloud9.amazonaws.com\",\"ec2.amazonaws.com\"]}}],\"Version\":\"2012-10-17\"}"
-#   path               = "/service-role/"
-# }
-
-# resource "aws_iam_role_policy_attachment" "api-send-to-sqs" {
-#   role       = "api-gateway-to-sqs"
-#   policy_arn = "arn:aws:iam::${local.account}:policy/api-send-to-sqs"
-# }
-
-# resource "aws_iam_policy" "api-send-to-sqs" {
-#   name          = "api-send-to-sqs"
-#   description   = "test sending edi files to sqs via api gateway"
-#   policy        = "{\"Statement\":[{\"Action\":[\"sqs:SendMessage\"],\"Effect\":\"Allow\",\"Resource\":[\"arn:aws:sqs:us-east-1:${local.account}:edi-queue.fifo\"]}],\"Version\":\"2012-10-17\"}"
-# }
+resource "aws_iam_role_policy_attachment" "AWSLambdaBasicExecutionRole" {
+  role       = aws_iam_role.edi-TenderMsgFunctionRole.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
 
 # resource "aws_db_instance" "mysqlforlambda" {
 #   instance_class        = "db.t3.micro"
