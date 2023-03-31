@@ -14,18 +14,6 @@ provider "aws" {
   region = "us-east-1"
 }
 
-# resource "aws_instance" "aws-cloud9-lambdaLayer-675cc62ded834830a5001d7332ef5cd2" {
-#   ami           = "ami-06ccf6ffb21d5e9be"
-#   instance_type = "t2.micro"
-
-#   lifecycle {
-#     ignore_changes = [
-#         user_data,
-#         user_data_replace_on_change
-#     ]
-#   }
-# }
-
 resource "aws_sqs_queue" "edi-DeadLetters-2" {
   name                              = "edi-DeadLetters-2.fifo"
   content_based_deduplication       = true
