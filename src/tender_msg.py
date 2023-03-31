@@ -2,14 +2,43 @@ import sys
 import logging
 import pymysql
 import json
+import boto3
+from botocore.exceptions import ClientError
+
+
+def get_secret():
+
+    secret_name = "poc-demo"
+    region_name = "us-east-1"
+
+    # Create a Secrets Manager client
+    session = boto3.session.Session()
+    client = session.client(
+        service_name='secretsmanager',
+        region_name=region_name
+    )
+
+    try:
+        get_secret_value_response = client.get_secret_value(
+            SecretId=secret_name
+        )
+    except ClientError as e:
+        # For a list of exceptions thrown, see
+        # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
+        raise e
+
+    # Decrypts secret using the associated KMS key.
+    secret = get_secret_value_response['SecretString']
+
+    return secret
+
 
 # rds settings
-# region
-rds_host = "mysqlforlambda.ctempmbutv6y.us-east-1.rds.amazonaws.com"
-user_name = "admin"
-password = "Cfgauss11!Aws"
-db_name = "ExampleDB"
-# endregion
+secret = json.loads(get_secret())
+rds_host = secret['host']
+user_name = secret['username']
+password = secret['password']
+db_name = secret['dbname']
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -31,7 +60,7 @@ def lambda_handler(event, context):
     failed_messages_to_reprocess = []
     batch_failure_response = {}
     item_count = 0
-
+    
     for record in event['Records']:
         try:
             print(f"PROCESSING MESSAGE ID: {record['messageId']}")
@@ -54,7 +83,7 @@ def lambda_handler(event, context):
             conn.commit()
 
             # return "Added %d items to RDS MySQL table" % item_count
-         
+        
         except Exception as err:
             print(f"FAILED MESSAGE ID: {record['messageId']}; Unexpected {err=}, {type(err)=}")
             failed_messages_to_reprocess.append({"itemIdentifier": record['messageId']})

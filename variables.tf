@@ -7,4 +7,6 @@ locals {
   lambda_src_path = "./src"
   account = "186314775128"
   stage_name = "v1"
+
+  # add either arn or filepath/name for lambda layer
 }

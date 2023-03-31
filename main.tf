@@ -195,7 +195,8 @@ resource "aws_api_gateway_integration_response" "integration_response" {
 }
 
 resource "aws_lambda_layer_version" "edi-2" {
-  filename            = "lambda-layer/edi-layer-requirements.zip"
+  # cf. lambda fn and variables file
+  filename            = "lambda-layer/edi-layer-requirements.zip" 
   layer_name          = "edi-2"
   compatible_runtimes = ["python3.9"]
 }
@@ -212,7 +213,7 @@ resource "aws_lambda_function" "edi-TenderMsgFunction" {
   runtime          = "python3.9"
   handler          = "tender_msg.lambda_handler"
   layers = [
-    # "arn:aws:lambda:us-east-1:${local.account}:layer:edi:1"
+    # "arn:aws:lambda:us-east-1:${local.account}:layer:edi:1"   - REVIEW cleaner option
     aws_lambda_layer_version.edi-2.arn
   ]
   timeout = 20
