@@ -33,12 +33,12 @@ resource "aws_sqs_queue" "edi-DeadLetters-2" {
   fifo_queue                        = true
   fifo_throughput_limit             = "perQueue"
   kms_data_key_reuse_period_seconds = 300
-  message_retention_seconds         = 600
-  receive_wait_time_seconds         = 1
-  visibility_timeout_seconds        = 1
-  redrive_allow_policy              = "{\"redrivePermission\":\"allowAll\"}"
-  redrive_policy                    = ""
-  sqs_managed_sse_enabled           = true
+  # message_retention_seconds         = 600  note: default is 345600 (4 days)
+  receive_wait_time_seconds  = 1
+  visibility_timeout_seconds = 1
+  redrive_allow_policy       = "{\"redrivePermission\":\"allowAll\"}"
+  redrive_policy             = ""
+  sqs_managed_sse_enabled    = true
 }
 
 resource "aws_sqs_queue" "edi-queue-2" {
@@ -50,11 +50,11 @@ resource "aws_sqs_queue" "edi-queue-2" {
   kms_data_key_reuse_period_seconds = 300
   message_retention_seconds         = 180
   receive_wait_time_seconds         = 2
-  visibility_timeout_seconds        = 60
-  redrive_allow_policy              = ""
+  # visibility_timeout_seconds        = 60 note: default is 30
+  redrive_allow_policy = ""
   redrive_policy = jsonencode({
     deadLetterTargetArn = aws_sqs_queue.edi-DeadLetters-2.arn,
-    maxReceiveCount     = 5
+    maxReceiveCount     = 1
   })
   sqs_managed_sse_enabled = true
 }
@@ -98,41 +98,27 @@ resource "aws_iam_role_policy_attachment" "AmazonAPIGatewayPushToCloudWatchLogs"
 
 data "aws_iam_policy_document" "edi-queue" {
   statement {
-    # sid    = "First"
     effect = "Allow"
 
     principals {
-      type        = "*"
-      identifiers = ["*"]
+      type        = "AWS"
+      identifiers = [aws_iam_role.api-gateway-to-sqs-2.arn]
     }
 
     actions   = ["SQS:*"]
     resources = [aws_sqs_queue.edi-DeadLetters-2.arn]
-
-    condition {
-      test     = "ArnEquals"
-      variable = "aws:SourceArn"
-      values   = [aws_iam_role.api-gateway-to-sqs-2.arn]
-    }
   }
 
   statement {
-    # sid    = "First"
     effect = "Allow"
 
     principals {
-      type        = "*"
-      identifiers = ["*"]
+      type        = "AWS"
+      identifiers = [aws_iam_role.api-gateway-to-sqs-2.arn]
     }
 
     actions   = ["SQS:*"]
     resources = [aws_sqs_queue.edi-queue-2.arn]
-
-    condition {
-      test     = "ArnEquals"
-      variable = "aws:SourceArn"
-      values   = [aws_iam_role.api-gateway-to-sqs-2.arn]
-    }
   }
 }
 
@@ -220,9 +206,9 @@ resource "aws_api_gateway_integration_response" "integration_response" {
   ]
 }
 
-resource "aws_lambda_layer_version" "edi-2"{
-  filename = "lambda-layer/edi-layer-requirements.zip"
-  layer_name = "edi-2"
+resource "aws_lambda_layer_version" "edi-2" {
+  filename            = "lambda-layer/edi-layer-requirements.zip"
+  layer_name          = "edi-2"
   compatible_runtimes = ["python3.9"]
 }
 
@@ -230,51 +216,51 @@ resource "aws_lambda_layer_version" "edi-2"{
 resource "aws_lambda_function" "edi-TenderMsgFunction" {
   filename = "${local.building_path}/${local.lambda_code_filename}"
   depends_on = [
-        null_resource.build_lambda_function
+    null_resource.build_lambda_function
   ]
-  source_code_hash = "${data.archive_file.lambda.output_base64sha256}"
-  function_name = "edi-TenderMsgFunction"
-  role          = aws_iam_role.edi-TenderMsgFunctionRole.arn
-  runtime       = "python3.9"
-  handler       = "tender_msg.lambda_handler"
-  layers        =  [
+  source_code_hash = data.archive_file.lambda.output_base64sha256
+  function_name    = "edi-TenderMsgFunction"
+  role             = aws_iam_role.edi-TenderMsgFunctionRole.arn
+  runtime          = "python3.9"
+  handler          = "tender_msg.lambda_handler"
+  layers = [
     # "arn:aws:lambda:us-east-1:${local.account}:layer:edi:1"
     aws_lambda_layer_version.edi-2.arn
   ]
-  timeout       = 20
+  timeout = 20
 
   lifecycle {
     ignore_changes = [
-        publish
+      publish
     ]
   }
 }
 
 resource "null_resource" "build_lambda_function" {
-    triggers = {
-        build_number = "${timestamp()}" # TODO: calculate hash of lambda function. Mo will have a look at this part
-    }
+  triggers = {
+    build_number = "${timestamp()}" # TODO: calculate hash of lambda function. Mo will have a look at this part
+  }
 
-    provisioner "local-exec" {
-        command =  substr(pathexpand("~"), 0, 1) == "/"? "./py_build.sh \"${local.lambda_src_path}\" \"${local.building_path}\" \"${local.lambda_code_filename}\" Function" : "powershell.exe -File .\\PyBuild.ps1 ${local.lambda_src_path} ${local.building_path} ${local.lambda_code_filename} Function"
-    }
+  provisioner "local-exec" {
+    command = substr(pathexpand("~"), 0, 1) == "/" ? "./py_build.sh \"${local.lambda_src_path}\" \"${local.building_path}\" \"${local.lambda_code_filename}\" Function" : "powershell.exe -File .\\PyBuild.ps1 ${local.lambda_src_path} ${local.building_path} ${local.lambda_code_filename} Function"
+  }
 }
 
 resource "null_resource" "sam_metadata_aws_lambda_function_edi-TenderMsgFunction" {
-    triggers = {
-        resource_name = "aws_lambda_function.edi-TenderMsgFunction"
-        resource_type = "ZIP_LAMBDA_FUNCTION"
-        original_source_code = "${local.lambda_src_path}"
-        built_output_path = "${local.building_path}/${local.lambda_code_filename}"
-    }
-    depends_on = [
-        null_resource.build_lambda_function
-    ]
+  triggers = {
+    resource_name        = "aws_lambda_function.edi-TenderMsgFunction"
+    resource_type        = "ZIP_LAMBDA_FUNCTION"
+    original_source_code = "${local.lambda_src_path}"
+    built_output_path    = "${local.building_path}/${local.lambda_code_filename}"
+  }
+  depends_on = [
+    null_resource.build_lambda_function
+  ]
 }
 
 data "archive_file" "lambda" {
   type        = "zip"
-  source_dir = "./src"
+  source_dir  = "./src"
   output_path = "${local.building_path}/${local.lambda_code_filename}"
 }
 
@@ -289,10 +275,10 @@ resource "aws_iam_role_policy_attachment" "AmazonSQSFullAccess" {
 }
 
 resource "aws_lambda_event_source_mapping" "event_source_mapping" {
-  event_source_arn = "${aws_sqs_queue.edi-queue-2.arn}"
-  enabled          = true
-  function_name    = "${aws_lambda_function.edi-TenderMsgFunction.function_name}"
-  batch_size       = 1
+  event_source_arn        = aws_sqs_queue.edi-queue-2.arn
+  function_name           = aws_lambda_function.edi-TenderMsgFunction.function_name
+  batch_size              = 5
+  function_response_types = ["ReportBatchItemFailures"]
 }
 
 resource "aws_iam_role_policy_attachment" "AWSLambdaBasicExecutionRole" {
