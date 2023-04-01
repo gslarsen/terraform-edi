@@ -131,6 +131,43 @@ resource "aws_api_gateway_rest_api" "edi" {
   disable_execute_api_endpoint = false
 }
 
+data "aws_iam_policy_document" "edi" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    actions   = ["execute-api:Invoke"]
+    resources = ["${aws_api_gateway_rest_api.edi.execution_arn}/*/*/*"]
+  }
+
+  statement {
+    effect = "Deny"
+
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    actions   = ["execute-api:Invoke"]
+    resources = ["${aws_api_gateway_rest_api.edi.execution_arn}/*/*/*"]
+
+    condition {
+      test     = "NotIpAddress"
+      variable = "aws:SourceIp"
+      values   = ["192.40.6.97", "192.40.6.95", "50.225.142.178"]
+    }
+  }
+}
+
+resource "aws_api_gateway_rest_api_policy" "edi" {
+  rest_api_id = aws_api_gateway_rest_api.edi.id
+  policy      = data.aws_iam_policy_document.edi.json
+}
+
 resource "aws_api_gateway_resource" "edi" {
   rest_api_id = aws_api_gateway_rest_api.edi.id
   parent_id   = aws_api_gateway_rest_api.edi.root_resource_id
@@ -168,6 +205,20 @@ resource "aws_api_gateway_deployment" "edi" {
     aws_api_gateway_method.edi,
     aws_api_gateway_integration.edi
   ]
+
+  triggers = {
+    redeployment = sha1(jsonencode([
+      aws_api_gateway_resource.edi,
+      aws_api_gateway_method.edi,
+      aws_api_gateway_integration.edi,
+      data.aws_iam_policy_document.edi
+    ]))
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
 }
 
 resource "aws_api_gateway_stage" "edi" {
@@ -196,7 +247,7 @@ resource "aws_api_gateway_integration_response" "integration_response" {
 
 resource "aws_lambda_layer_version" "edi-2" {
   # cf. lambda fn and variables file
-  filename            = "lambda-layer/edi-layer-requirements.zip" 
+  filename            = "lambda-layer/edi-layer-requirements.zip"
   layer_name          = "edi-2"
   compatible_runtimes = ["python3.9"]
 }
