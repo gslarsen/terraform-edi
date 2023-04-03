@@ -1,3 +1,4 @@
+
 terraform {
   required_providers {
     aws = {
@@ -21,7 +22,7 @@ resource "aws_sqs_queue" "edi-DeadLetters-2" {
   fifo_queue                        = true
   fifo_throughput_limit             = "perQueue"
   kms_data_key_reuse_period_seconds = 300
-  # message_retention_seconds         = 600  note: default is 345600 (4 days)
+  # message_retention_seconds       = note: default is 345600 (4 days)
   receive_wait_time_seconds  = 1
   visibility_timeout_seconds = 1
   redrive_allow_policy       = "{\"redrivePermission\":\"allowAll\"}"
@@ -38,7 +39,7 @@ resource "aws_sqs_queue" "edi-queue-2" {
   kms_data_key_reuse_period_seconds = 300
   message_retention_seconds         = 180
   receive_wait_time_seconds         = 2
-  # visibility_timeout_seconds        = 60 note: default is 30
+  # visibility_timeout_seconds      = note: default is 30
   redrive_allow_policy = ""
   redrive_policy = jsonencode({
     deadLetterTargetArn = aws_sqs_queue.edi-DeadLetters-2.arn,
@@ -140,7 +141,9 @@ data "aws_iam_policy_document" "edi" {
       identifiers = ["*"]
     }
 
-    actions   = ["execute-api:Invoke"]
+    actions = [
+      "execute-api:Invoke"
+    ]
     resources = ["${aws_api_gateway_rest_api.edi.execution_arn}/*/*/*"]
   }
 
@@ -198,6 +201,22 @@ resource "aws_api_gateway_method" "edi" {
   authorization = "NONE"
 }
 
+resource "aws_api_gateway_method_settings" "edi" {
+  rest_api_id = aws_api_gateway_rest_api.edi.id
+  stage_name  = aws_api_gateway_stage.edi.stage_name
+  method_path = "*/*"
+
+  settings {
+    metrics_enabled    = true
+    logging_level      = "ERROR" # REVIEW - ERROR is only for certain (e.g. not 403 forbidden) errors and may be used instead; "INFO" will get a summary log of both info & errors
+    data_trace_enabled = false #; if this is enabled, it results in "Full Request & Response Logs - detailed logging for ALL Events - discouraged in production"
+
+    # Limit the rate of calls to prevent unwanted charges - REVIEW for production if necessary
+    # throttling_rate_limit  = 100
+    # throttling_burst_limit = 50
+  }
+}
+
 resource "aws_api_gateway_deployment" "edi" {
   rest_api_id = aws_api_gateway_rest_api.edi.id
 
@@ -222,10 +241,17 @@ resource "aws_api_gateway_deployment" "edi" {
 }
 
 resource "aws_api_gateway_stage" "edi" {
+  # depends_on    = [aws_cloudwatch_log_group.edi]
   deployment_id = aws_api_gateway_deployment.edi.id
   rest_api_id   = aws_api_gateway_rest_api.edi.id
   stage_name    = local.stage_name
 }
+
+# resource "aws_cloudwatch_log_group" "edi" {
+#   name              = "API-Gateway-Execution-Logs_${aws_api_gateway_rest_api.edi.id}/${local.stage_name}"
+#   retention_in_days = 5
+#   # ... potentially other configuration ...
+# }
 
 resource "aws_api_gateway_method_response" "response_200" {
   rest_api_id = aws_api_gateway_rest_api.edi.id
@@ -252,7 +278,7 @@ resource "aws_lambda_layer_version" "edi-2" {
   compatible_runtimes = ["python3.9"]
 }
 
-# note: assumes layer is already created
+# assumes layer is already created
 resource "aws_lambda_function" "edi-TenderMsgFunction" {
   filename = "${local.building_path}/${local.lambda_code_filename}"
   depends_on = [
@@ -264,7 +290,7 @@ resource "aws_lambda_function" "edi-TenderMsgFunction" {
   runtime          = "python3.9"
   handler          = "tender_msg.lambda_handler"
   layers = [
-    # "arn:aws:lambda:us-east-1:${local.account}:layer:edi:1"   - REVIEW cleaner option
+    # "arn:aws:lambda:us-east-1:${local.account}:layer:edi:1"   - REVIEW - better?
     aws_lambda_layer_version.edi-2.arn
   ]
   timeout = 20
@@ -278,7 +304,7 @@ resource "aws_lambda_function" "edi-TenderMsgFunction" {
 
 resource "null_resource" "build_lambda_function" {
   triggers = {
-    build_number = "${timestamp()}" # TODO: calculate hash of lambda function. Mo will have a look at this part
+    build_number = "${timestamp()}"
   }
 
   provisioner "local-exec" {
@@ -326,14 +352,6 @@ resource "aws_iam_role_policy_attachment" "AWSLambdaBasicExecutionRole" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-# resource "aws_db_instance" "mysqlforlambda" {
-#   instance_class        = "db.t3.micro"
-#   storage_encrypted     = true
-#   apply_immediately     = null
-#   copy_tags_to_snapshot = true
-#   max_allocated_storage = 1000
-#   publicly_accessible   = true
-#   skip_final_snapshot   = true
-# }
+
 
 
