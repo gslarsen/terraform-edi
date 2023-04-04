@@ -212,7 +212,7 @@ resource "aws_api_gateway_method_settings" "edi" {
 
   settings {
     metrics_enabled    = true
-    logging_level      = "ERROR" # REVIEW - ERROR is only for certain (e.g. not 403 forbidden) errors and may be used instead; "INFO" will get a summary log of both info & errors
+    logging_level      = "INFO" # REVIEW - ERROR is only for certain (e.g. not 403 forbidden) errors and may be used instead; "INFO" will get a summary log of both info & errors
     data_trace_enabled = false   #; if this is enabled, it results in "Full Request & Response Logs - detailed logging for ALL Events - discouraged in production"
 
     # Limit the rate of calls to prevent unwanted charges - REVIEW for production if necessary
