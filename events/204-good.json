@@ -1,0 +1,164 @@
+{
+  "Records": [
+    {
+      "messageId": "0f51cd64-f968-491e-8b70-30e717d95eb9",
+      "receiptHandle": "AQEBQfyB0Jw5nTWLdy1M37WcvTBw5zwC/4N9ivXgLpG04GaF4U/BRBP1w9bAySxaCHOK2HNpW9MfLnLVl6LHiowgV/h4E3unYArjDJXmlT+NiMD4fIvI84/kWeG0/Cf+JN/igZf8av3LyBJ5P/sP1YBf5c4yZ/a/XlxysXAfrO6f+ue10ZKez5wPMDx2V1S09XW2NpzUdKx0R3RnimD3Xxp6PBeVVEvso/TvI1imtNS2exgRdSKpWEsB259ylOMLu46AfCBTNsj4PGFpQQDgrEkySQ==",
+      "body": {
+        "LoadTender": {
+          "cntrl": "000001370",
+          "receiver": "TTFD",
+          "sender": "PENSKEEVOQUA",
+          "xmlns": "http://quantumedgetechnology/edgetms/schemas",
+          "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+          "xsi:schemaLocation": "http://quantumedgetechnology/edgetms/schemasLoadTender.xsd",
+          "Shipment": {
+            "eq_len": "",
+            "eq_num": "0",
+            "eq_type": "0",
+            "id": "61738801",
+            "pay_method": "PP",
+            "purpose": "00",
+            "respond_datetime": "2021-01-19T15:36:00",
+            "respond_timezone": "ET",
+            "scac": "TTFD",
+            "weight": "18961.05",
+            "weight_type": "1"
+          },
+          "Reference": [
+            { "type": "61", "value": "TL" },
+            { "type": "25", "value": "NUL" },
+            { "type": "9", "value": "EVOQUA" }
+          ],
+          "Note": [
+            { "type": "7", "value": "TL" },
+            { "type": "7", "value": "NUL" },
+            { "type": "7", "value": "EVOQUA" },
+            { "type": "7", "value": "48\"FLATBEDEQUIP" },
+            {
+              "type": "7",
+              "value": "SHIPPERJenneferHamblin414.762.7500DELIVERYCherylMcaninch419-295-80"
+            },
+            { "type": "7", "value": "43,JASON740-627-0695TARPREQUIRED" }
+          ],
+          "Stop": [
+            {
+              "quantity": "15",
+              "quantity_type": "10",
+              "seq": "1",
+              "type": "CL",
+              "weight": "18961.05",
+              "weight_type": "1",
+              "Note": [
+                { "type": "7", "value": "0" },
+                {
+                  "type": "7",
+                  "value": "SHIPPERJenneferHamblin414.762.7500DELIVERYCherylMcaninch419-295-80"
+                },
+                { "type": "7", "value": "43,JASON740-627-0695TARPREQUIRED" }
+              ],
+              "Date": [
+                {
+                  "date": "2021-01-26",
+                  "time": "08:00:00",
+                  "type": "20",
+                  "zone": "ET"
+                },
+                {
+                  "date": "2021-01-26",
+                  "time": "15:00:00",
+                  "type": "25",
+                  "zone": "ET"
+                }
+              ],
+              "Location": {
+                "address": "2969SCHASEAVE",
+                "city": "MILWAUKEE",
+                "code": "EVOQ2114385",
+                "country": "USA",
+                "name": "AW2LOGISTICS",
+                "postal": "53207",
+                "state": "WI",
+                "type": "SF"
+              },
+              "Goods": {
+                "comm_code": "CHEM",
+                "comm_type": "N",
+                "quantity": "15",
+                "quantity_type": "8",
+                "po_num": "EVOQUA15832078",
+                "primary": "SH-173015666",
+                "weight": "18961.05",
+                "weight_type": "1"
+              }
+            },
+            {
+              "quantity": "15",
+              "quantity_type": "10",
+              "seq": "2",
+              "type": "UL",
+              "weight": "18961.05",
+              "weight_type": "1",
+              "Note": [
+                { "type": "7", "value": "0" },
+                {
+                  "type": "7",
+                  "value": "SHIPPERJenneferHamblin414.762.7500DELIVERYCherylMcaninch419-295-80"
+                },
+                { "type": "7", "value": "43,JASON740-627-0695TARPREQUIRED" }
+              ],
+              "Date": [
+                {
+                  "date": "2021-01-26",
+                  "time": "08:01:00",
+                  "type": "75",
+                  "zone": "ET"
+                },
+                {
+                  "date": "2021-01-27",
+                  "time": "14:00:00",
+                  "type": "80",
+                  "zone": "ET"
+                }
+              ],
+              "Location": {
+                "address": "1300CHARDONRD",
+                "city": "CLEVELAND",
+                "code": "EVOQ2000722",
+                "country": "USA",
+                "name": "CITYOFCLEVELAND",
+                "postal": "44117",
+                "state": "OH",
+                "type": "ST"
+              },
+              "Goods": {
+                "comm_code": "CHEM",
+                "comm_type": "N",
+                "quantity": "15",
+                "quantity_type": "8",
+                "po_num": "EVOQUA15832078",
+                "primary": "SH-173015666",
+                "weight": "18961.05",
+                "weight_type": "1"
+              }
+            }
+          ]
+        }
+      },
+      "attributes": {
+        "ApproximateReceiveCount": "1",
+        "AWSTraceHeader": "Root=1-642af4a3-7b621a7778df17531d271b47",
+        "SentTimestamp": "1680536739372",
+        "SequenceNumber": "18876961478988786688",
+        "MessageGroupId": "edi",
+        "SenderId": "AROASWYJZ3JMLLZLSCUO4:BackplaneAssumeRoleSession",
+        "MessageDeduplicationId": "1a6cb73ee7e0061af31097a9c58994a4463f4ad2a4f4df9278074f7e4fe5d5e6",
+        "ApproximateFirstReceiveTimestamp": "1680536739372"
+      },
+      "messageAttributes": {},
+      "md5OfBody": "850ed5d260616ebeef92517e39c23826",
+      "eventSource": "aws:sqs",
+      "eventSourceARN": "arn:aws:sqs:us-east-1:186314775128:edi-queue-2.fifo",
+      "awsRegion": "us-east-1"
+    }
+  ]
+}

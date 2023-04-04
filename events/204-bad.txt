@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LoadTender cntrl="000001370" receiver="TTFD" sender="PENSKEEVOQUA" xmlns="http://quantumedgetechnology/edgetms/schemas" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://quantumedgetechnology/edgetms/schemas LoadTender.xsd">
+  <Shipment eq_len="" eq_num="0" eq_type="0" id="61738801" pay_method="PP" purpose="00" respond_datetime="2021-01-19T15:36:00" respond_timezone="ET" scac="TTFD" weight="18961.05" weight_type="1" />
+  <Reference type="61" value="TL" />
+  <Reference type="25" value="NUL" />
+  <Reference type="9" value="EVOQUA" />
+  <Note type="7" value="TL" />
+  <Note type="7" value="NUL" />
+  <Note type="7" value="EVOQUA" />
+  <Note type="7" value="48' FLATBED EQUIP" />
+  <Note type="7" value="SHIPPER   Jennefer Hamblin 414.762.7500    DELIVERY   Cheryl Mcaninch 419-295-80" />
+  <Note type="7" value="43, JASON 740-627-0695    TARP REQUIRED" />
+  <Stop quantity="15" quantity_type="10" seq="1" type="CL" weight="18961.05" weight_type="1">
+    <Note type="7" value="0" />
+    <Note type="7" value="SHIPPER   Jennefer Hamblin 414.762.7500    DELIVERY   Cheryl Mcaninch 419-295-80" />
+    <Note type="7" value="43, JASON 740-627-0695    TARP REQUIRED" />
+    <Date date="2021-01-26" time="08:00:00" type="20" zone="ET" />
+    <Date date="2021-01-26" time="15:00:00" type="25" zone="ET" />
+    <Location address="2969 S CHASE AVE" city="MILWAUKEE" code="EVOQ2114385" country="USA" name="AW2 LOGISTICS" postal="53207" state="WI" type="SF" />
+    <Goods comm_code="CHEM" comm_type="N" quantity="15" quantity_type="8" po_num="EVOQUA15832078" primary="SH-173015666" weight="18961.05" weight_type="1" />
+  </Stop>
+  <Stop quantity="15" quantity_type="10" seq="2" type="UL" weight="18961.05" weight_type="1">
+    <Note type="7" value="0" />
+    <Note type="7" value="SHIPPER   Jennefer Hamblin 414.762.7500    DELIVERY   Cheryl Mcaninch 419-295-80" />
+    <Note type="7" value="43, JASON 740-627-0695    TARP REQUIRED" />
+    <Date date="2021-01-26" time="08:01:00" type="75" zone="ET" />
+    <Date date="2021-01-27" time="14:00:00" type="80" zone="ET" />
+    <Location address="1300 CHARDON RD" city="CLEVELAND" code="EVOQ2000722" country="USA" name="CITY OF CLEVELAND" postal="44117" state="OH" type="ST" />
+    <Goods comm_code="CHEM" comm_type="N" quantity="15" quantity_type="8" po_num="EVOQUA15832078" primary="SH-173015666" weight="18961.05" weight_type="1" />
+  </Stop>
+</LoadTender>

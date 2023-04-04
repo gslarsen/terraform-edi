@@ -60,29 +60,20 @@ def lambda_handler(event, context):
     failed_messages_to_reprocess = []
     batch_failure_response = {}
     item_count = 0
-    
+
     for record in event['Records']:
         try:
             print(f"PROCESSING MESSAGE ID: {record['messageId']}")
-            message = json.loads(record['body'])
-            print(f"BODY before .loads: {type(message)}")
+            message = json.loads(record['body']) if isinstance(record['body'], str) else record['body']
             json_msg = json.dumps(message)
-            print(f"BODY after .loads: {json_msg}")
 
             sql_string = f"insert into tenders (tender) values ({json.dumps(json_msg)})" #{json.dumps(message)}
 
             with conn.cursor() as cur:
                 cur.execute(sql_string)
                 conn.commit()
-                # cur.execute("select * from tenders order by id desc limit 1")
-                # logger.info("The following items have been added to the database:")
-                # for row in cur:
-                #     item_count += 1
-                #     logger.info(row)
                 item_count += 1
             conn.commit()
-
-            # return "Added %d items to RDS MySQL table" % item_count
         
         except Exception as err:
             print(f"FAILED MESSAGE ID: {record['messageId']}; Unexpected {err=}, {type(err)=}")

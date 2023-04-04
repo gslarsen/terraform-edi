@@ -209,7 +209,7 @@ resource "aws_api_gateway_method_settings" "edi" {
   settings {
     metrics_enabled    = true
     logging_level      = "ERROR" # REVIEW - ERROR is only for certain (e.g. not 403 forbidden) errors and may be used instead; "INFO" will get a summary log of both info & errors
-    data_trace_enabled = false #; if this is enabled, it results in "Full Request & Response Logs - detailed logging for ALL Events - discouraged in production"
+    data_trace_enabled = false   #; if this is enabled, it results in "Full Request & Response Logs - detailed logging for ALL Events - discouraged in production"
 
     # Limit the rate of calls to prevent unwanted charges - REVIEW for production if necessary
     # throttling_rate_limit  = 100
@@ -246,12 +246,6 @@ resource "aws_api_gateway_stage" "edi" {
   rest_api_id   = aws_api_gateway_rest_api.edi.id
   stage_name    = local.stage_name
 }
-
-# resource "aws_cloudwatch_log_group" "edi" {
-#   name              = "API-Gateway-Execution-Logs_${aws_api_gateway_rest_api.edi.id}/${local.stage_name}"
-#   retention_in_days = 5
-#   # ... potentially other configuration ...
-# }
 
 resource "aws_api_gateway_method_response" "response_200" {
   rest_api_id = aws_api_gateway_rest_api.edi.id
@@ -301,6 +295,9 @@ resource "aws_lambda_function" "edi-TenderMsgFunction" {
     ]
   }
 }
+
+# Terraform natively does not create the deployment package, so the following build process 
+# handles this package creation
 
 resource "null_resource" "build_lambda_function" {
   triggers = {
