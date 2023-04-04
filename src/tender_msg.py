@@ -5,7 +5,7 @@ import json
 import boto3
 from botocore.exceptions import ClientError
 
-
+# get secret assumes secret mgr is configured for the database
 def get_secret():
 
     secret_name = "poc-demo"
