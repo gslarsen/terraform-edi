@@ -85,6 +85,10 @@ resource "aws_iam_role_policy_attachment" "AmazonAPIGatewayPushToCloudWatchLogs"
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
 }
 
+resource "aws_api_gateway_account" "edi" {
+  cloudwatch_role_arn = aws_iam_role.api-gateway-to-sqs-2.arn
+}
+
 data "aws_iam_policy_document" "edi-queue" {
   statement {
     effect = "Allow"
@@ -297,7 +301,7 @@ resource "aws_lambda_function" "edi-TenderMsgFunction" {
 }
 
 # Terraform natively does not create the deployment package, so the following build process 
-# handles this package creation
+# handles this package creation; 
 
 resource "null_resource" "build_lambda_function" {
   triggers = {
@@ -305,6 +309,7 @@ resource "null_resource" "build_lambda_function" {
   }
 
   provisioner "local-exec" {
+    # change command as req'd for native file access (e.g. osx make the script executalbe: "chmod +x ./py_build...in command)
     command = substr(pathexpand("~"), 0, 1) == "/" ? "./py_build.sh \"${local.lambda_src_path}\" \"${local.building_path}\" \"${local.lambda_code_filename}\" Function" : "powershell.exe -File .\\PyBuild.ps1 ${local.lambda_src_path} ${local.building_path} ${local.lambda_code_filename} Function"
   }
 }
