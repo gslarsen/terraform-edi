@@ -300,6 +300,34 @@ resource "aws_lambda_function" "edi-TenderMsgFunction" {
   }
 }
 
+resource "aws_lambda_event_source_mapping" "event_source_mapping" {
+  event_source_arn        = aws_sqs_queue.edi-queue-2.arn
+  function_name           = aws_lambda_function.edi-TenderMsgFunction.function_name
+  batch_size              = 5
+  function_response_types = ["ReportBatchItemFailures"]
+}
+
+data "archive_file" "lambda" {
+  type        = "zip"
+  source_dir  = "./src"
+  output_path = "${local.building_path}/${local.lambda_code_filename}"
+}
+
+resource "aws_iam_role" "edi-TenderMsgFunctionRole" {
+  name               = "edi-TenderMsgFunctionRole"
+  assume_role_policy = "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}"
+}
+
+resource "aws_iam_role_policy_attachment" "AmazonSQSFullAccess" {
+  role       = aws_iam_role.edi-TenderMsgFunctionRole.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSQSFullAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "AWSLambdaBasicExecutionRole" {
+  role       = aws_iam_role.edi-TenderMsgFunctionRole.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
 # Terraform natively does not create the deployment package, so the following build process 
 # handles this package creation; 
 
@@ -326,33 +354,7 @@ resource "null_resource" "sam_metadata_aws_lambda_function_edi-TenderMsgFunction
   ]
 }
 
-data "archive_file" "lambda" {
-  type        = "zip"
-  source_dir  = "./src"
-  output_path = "${local.building_path}/${local.lambda_code_filename}"
-}
 
-resource "aws_iam_role" "edi-TenderMsgFunctionRole" {
-  name               = "edi-TenderMsgFunctionRole"
-  assume_role_policy = "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}"
-}
-
-resource "aws_iam_role_policy_attachment" "AmazonSQSFullAccess" {
-  role       = aws_iam_role.edi-TenderMsgFunctionRole.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSQSFullAccess"
-}
-
-resource "aws_lambda_event_source_mapping" "event_source_mapping" {
-  event_source_arn        = aws_sqs_queue.edi-queue-2.arn
-  function_name           = aws_lambda_function.edi-TenderMsgFunction.function_name
-  batch_size              = 5
-  function_response_types = ["ReportBatchItemFailures"]
-}
-
-resource "aws_iam_role_policy_attachment" "AWSLambdaBasicExecutionRole" {
-  role       = aws_iam_role.edi-TenderMsgFunctionRole.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-}
 
 
 
