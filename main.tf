@@ -354,8 +354,3 @@ resource "null_resource" "sam_metadata_aws_lambda_function_edi-TenderMsgFunction
   ]
 }
 
-
-
-
-
-
