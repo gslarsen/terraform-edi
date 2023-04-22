@@ -6,6 +6,4 @@ output "api_redeployment_triggers_sha" {
 output "total_count_of_resources" {
   description = "total count of resources"
   value       = length(regexall("data |resource ", file("main.tf")))
-  # value       = regex("(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d)", "2019-02-01")
-  # value = file("main.tf")
 }
